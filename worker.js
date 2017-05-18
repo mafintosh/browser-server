@@ -12,10 +12,6 @@ self.addEventListener('message', function (e) {
   else s.onstart(e.data)
 })
 
-function onready (client) {
-  client.postMessage({type: 'ready'})
-}
-
 self.addEventListener('fetch', function (e) {
   var path = '/' + e.request.url.split('/').slice(3).join('/')
   if (path.indexOf(prefix) !== 0) return
