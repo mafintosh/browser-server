@@ -1,6 +1,6 @@
 {
   "name": "browser-server",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A HTTP \"server\" in the browser that uses a service worker to allow you to easily send back your own stream of data.",
   "main": "index.js",
   "dependencies": {
