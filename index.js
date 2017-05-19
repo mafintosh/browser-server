@@ -108,6 +108,7 @@ BrowserServer.prototype._start = function () {
     if (!navigator.serviceWorker.controller) {
       console.error('Service worker registered, Reload the browser')
       console.error('If you know how to avoid this open a PR on https://github.com/mafintosh/browser-server and help me')
+      self.emit('reload')
       return
     }
     self.emit('ready')
