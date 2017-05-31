@@ -1,5 +1,6 @@
 var streams = []
 var prefix = '/browser-server/'
+var exclude = {{exclude}}
 
 self.addEventListener('message', function (e) {
   if (e.data.id === -1 && e.data.prefix) {
@@ -15,6 +16,9 @@ self.addEventListener('message', function (e) {
 self.addEventListener('fetch', function (e) {
   var path = '/' + e.request.url.split('/').slice(3).join('/')
   if (path.indexOf(prefix) !== 0) return
+  if (exclude.some(function (ex) {
+    return path.indexOf(ex) === 0
+  })) return
 
   var headers = {}
 

@@ -6,6 +6,7 @@
   "dependencies": {
     "http-status": "^1.0.1",
     "inherits": "^2.0.3",
+    "minimist": "^1.2.0",
     "readable-stream": "^2.2.9"
   },
   "devDependencies": {
