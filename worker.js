@@ -3,7 +3,7 @@ var prefix = '/browser-server/'
 var exclude = {{exclude}}
 
 function PseudoReadableStream (source) {
-  if (false && 'ReadableStream' in this) {
+  if ('ReadableStream' in self) {
     this._realObject = new ReadableStream(source)
   } else {
     var parts = []
