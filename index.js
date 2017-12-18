@@ -105,6 +105,13 @@ BrowserServer.prototype._start = function () {
   navigator.serviceWorker.register('/worker.js').then(function () {
     return navigator.serviceWorker.ready
   }).then(function (reg) {
-    self.emit('ready')
+    if (navigator.serviceWorker.controller) {
+      self.emit('ready')
+    } else {
+      var listener = navigator.serviceWorker.addEventListener('controllerchange', () => {
+        navigator.serviceWorker.removeEventListener('controllerchange', listener)
+        self.emit('ready')
+      })
+    }
   })
 }

@@ -1,5 +1,35 @@
 var streams = []
 var prefix = '/browser-server/'
+var exclude = {{exclude}}
+
+function PseudoReadableStream (source) {
+  if ('ReadableStream' in self) {
+    this._realObject = new ReadableStream(source)
+  } else {
+    var parts = []
+    var controller = {
+      enqueue: (data) => {
+        parts.push(data)
+        source.pull(controller)
+      },
+      close: () => {
+        this._realObject = new Blob(parts)
+        if (this._callback) {
+          this._callback(this._realObject)
+        }
+      }
+    }
+    source.pull(controller)
+  }
+
+  this.getRealObject = (cb) => {
+    if (this._realObject) {
+      cb(this._realObject)
+    } else {
+      this._callback = cb
+    }
+  }
+}
 
 self.addEventListener('message', function (e) {
   if (e.data.id === -1 && e.data.prefix) {
@@ -15,6 +45,9 @@ self.addEventListener('message', function (e) {
 self.addEventListener('fetch', function (e) {
   var path = '/' + e.request.url.split('/').slice(3).join('/')
   if (path.indexOf(prefix) !== 0) return
+  if (exclude.some(function (ex) {
+    return path.indexOf(ex) === 0
+  })) return
 
   var headers = {}
 
@@ -46,7 +79,7 @@ self.addEventListener('fetch', function (e) {
           }
 
           req.started = true
-          rs = new ReadableStream({
+          rs = new PseudoReadableStream({
             pull: function (c) {
               if (pulling) return
               pulling = true
@@ -61,7 +94,9 @@ self.addEventListener('fetch', function (e) {
             }
           })
 
-          resolve(new Response(rs, {status: data.status, headers: data.headers, statusText: data.statusText}))
+          rs.getRealObject((realObject) => {
+            resolve(new Response(realObject, {status: data.status, headers: data.headers, statusText: data.statusText}))
+          })
         },
         ondata: function (data) {
           pulling = false
