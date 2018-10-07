@@ -67,7 +67,13 @@ BrowserServer.prototype._start = function () {
           data: data
         }
 
-        navigator.serviceWorker.controller.postMessage(m)
+        // Transfer memory to serviceWorker instead of cloning if possible
+        if (data && data.buffer instanceof ArrayBuffer) {
+          navigator.serviceWorker.controller.postMessage(m, [data.buffer])
+        } else {
+          navigator.serviceWorker.controller.postMessage(m)
+        }
+
         cb()
       }
     }
