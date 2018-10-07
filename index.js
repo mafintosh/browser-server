@@ -25,8 +25,6 @@ BrowserServer.prototype._start = function () {
     var headers = {}
     var first = true
 
-    ws._callback = null
-    ws._pending = null
     ws._wants = false
 
     ws.statusCode = 200
@@ -54,7 +52,14 @@ BrowserServer.prototype._start = function () {
         })
       }
 
+      // wait until webstream is pulling to send data
       if (ws._wants) {
+        sendChunk()
+      } else {
+        self.once('_wants', sendChunk)
+      }
+
+      function sendChunk () {
         ws._wants = false
 
         var m = {
@@ -62,13 +67,15 @@ BrowserServer.prototype._start = function () {
           data: data
         }
 
-        navigator.serviceWorker.controller.postMessage(m)
-        cb()
-        return
-      }
+        // Transfer memory to serviceWorker instead of cloning if possible
+        if (data && data.buffer instanceof ArrayBuffer) {
+          navigator.serviceWorker.controller.postMessage(m, [data.buffer])
+        } else {
+          navigator.serviceWorker.controller.postMessage(m)
+        }
 
-      ws._pending = data
-      ws._callback = cb
+        cb()
+      }
     }
 
     streams[e.data.id] = ws
@@ -82,24 +89,8 @@ BrowserServer.prototype._start = function () {
     }
 
     var ws = streams[e.data.id]
-
-    if (ws._callback) {
-      var data = ws._pending
-      var cb = ws._callback
-
-      ws._pending = ws._callback = null
-
-      var m = {
-        id: e.data.id,
-        data: data
-      }
-
-      navigator.serviceWorker.controller.postMessage(m)
-      cb()
-      return
-    }
-
     ws._wants = true
+    self.emit('_wants')
   })
 
   navigator.serviceWorker.register('/worker.js').then(function () {
